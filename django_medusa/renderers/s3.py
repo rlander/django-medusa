@@ -1,4 +1,6 @@
 import cStringIO
+import os.path
+import difflib
 
 from datetime import timedelta, datetime
 from django.conf import settings
@@ -25,6 +27,27 @@ def _get_distribution():
         return conn.get_distribution_info(settings.AWS_DISTRIBUTION_ID)
     except:
         return None
+
+
+def _get_diff_of(string1, string2, outpath):
+    """
+    Every so often it is not clear why a certain generated file is being
+    updated on S3 (sometimes the content doesn't change but a very small part
+    of the file changes, like an article's date). This function helps to debug
+    these types of templates by writing to file a diff that compares the S3 and
+    the generated static file.
+    """
+    file_name = os.path.join(
+        settings.MEDUSA_DEPLOY_DIR,
+        outpath.split("/")[1] + '.diff'
+    )
+    print "Writing diff to %s" % file_name
+    with open(file_name, 'w') as data:
+        diff = difflib.unified_diff(
+                    string1.splitlines(1),
+                    string2.splitlines(1)
+                )
+        data.write(''.join(diff))
 
 
 def _get_bucket():
@@ -87,7 +110,10 @@ def _s3_render_path(args):
         # for some weird reason, etags are quoted, strip them
         etag = etag.strip('"').strip("'")
         if etag not in md5:
+            _get_diff_of(key.read(), temp_file.read(), outpath)
+            temp_file.seek(0)
             _upload_to_s3(key, temp_file)
+
             message = "Updating"
         else:
             message = "Skipping"
