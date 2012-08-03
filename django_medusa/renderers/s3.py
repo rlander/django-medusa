@@ -39,7 +39,7 @@ def _get_diff_of(string1, string2, outpath):
     """
     file_name = os.path.join(
         settings.MEDUSA_DEPLOY_DIR,
-        outpath.split("/")[1] + '.diff'
+        outpath.split("/")[2] + '.diff'
     )
     print "Writing diff to %s" % file_name
     with open(file_name, 'w') as data:
