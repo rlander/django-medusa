@@ -1,4 +1,7 @@
-import cStringIO
+try:
+    from cStringIO import StringIO
+except:
+    from StringIO import StringIO
 
 from datetime import timedelta, datetime
 from django.conf import settings
@@ -74,7 +77,7 @@ def _s3_render_path(args):
     key = bucket.get_key(outpath) or bucket.new_key(outpath)
     key.content_type = resp['Content-Type']
 
-    temp_file = cStringIO.StringIO(resp.content)
+    temp_file = StringIO(resp.content)
     md5 = key.compute_md5(temp_file)
 
     # If key is new, there's no etag yet
